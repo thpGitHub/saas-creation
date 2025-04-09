@@ -34,4 +34,58 @@ export async function GET() {
     });
   }
 }
+
+export async function DELETE(req) {
+  try {
+    const { postId } = await req.json();
+    const success = scheduler.cancelPost(postId);
+
+    if (success) {
+      return new Response(JSON.stringify({ 
+        message: 'Post supprimé avec succès'
+      }), {
+        status: 200,
+      });
+    } else {
+      return new Response(JSON.stringify({ 
+        error: 'Post non trouvé' 
+      }), { 
+        status: 404 
+      });
+    }
+  } catch (error) {
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Erreur serveur' 
+    }), { 
+      status: 500 
+    });
+  }
+}
+
+export async function PATCH(req) {
+  try {
+    const { postId, scheduledTime } = await req.json();
+    const success = scheduler.updatePost(postId, scheduledTime);
+
+    if (success) {
+      return new Response(JSON.stringify({ 
+        message: 'Post modifié avec succès'
+      }), {
+        status: 200,
+      });
+    } else {
+      return new Response(JSON.stringify({ 
+        error: 'Post non trouvé' 
+      }), { 
+        status: 404 
+      });
+    }
+  } catch (error) {
+    return new Response(JSON.stringify({ 
+      error: error.message || 'Erreur serveur' 
+    }), { 
+      status: 500 
+    });
+  }
+}
   

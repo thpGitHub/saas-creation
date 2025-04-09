@@ -13,6 +13,9 @@ export default function PostLinkedInPage() {
   // État pour stocker la liste des posts planifiés
   const [scheduledPosts, setScheduledPosts] = useState([]);
 
+  const [editingPost, setEditingPost] = useState(null);
+  const [editDateTime, setEditDateTime] = useState({ date: '', time: '' });
+
   // Fonction pour charger les posts planifiés
   const loadScheduledPosts = async () => {
     try {
@@ -64,6 +67,54 @@ export default function PostLinkedInPage() {
     }
   };
 
+  const handleDeletePost = async (postId) => {
+    try {
+      const response = await fetch('/api/send-to-make', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ postId }),
+      });
+
+      if (response.ok) {
+        loadScheduledPosts();
+      } else {
+        alert('Erreur lors de la suppression du post.');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue.');
+    }
+  };
+
+  const handleUpdatePost = async (postId) => {
+    try {
+      const publishDateTime = new Date(`${editDateTime.date}T${editDateTime.time}`).toISOString();
+      
+      const response = await fetch('/api/send-to-make', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          postId,
+          scheduledTime: publishDateTime 
+        }),
+      });
+
+      if (response.ok) {
+        setEditingPost(null);
+        loadScheduledPosts();
+      } else {
+        alert('Erreur lors de la modification du post.');
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      alert('Une erreur est survenue.');
+    }
+  };
+
   // Formater la date pour l'affichage
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -82,11 +133,11 @@ export default function PostLinkedInPage() {
   const minTime = now.toTimeString().slice(0, 5);
 
   return (
-    <main className="container mx-auto px-4 py-8 max-w-4xl">
+    <main className="container mx-auto px-4 py-12 max-w-6xl">
       <div className="grid gap-8 md:grid-cols-2">
         {/* Formulaire */}
         <div className="card">
-          <h1 className="text-2xl font-bold text-gray-800 mb-6">
+          <h1 className="text-2xl font-bold text-gray-800 mb-8">
             Publier sur LinkedIn
           </h1>
           
@@ -102,6 +153,7 @@ export default function PostLinkedInPage() {
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
+                placeholder="Titre de votre post"
               />
             </div>
 
@@ -115,6 +167,7 @@ export default function PostLinkedInPage() {
                 value={formData.content}
                 onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                 required
+                placeholder="Contenu de votre post"
               />
             </div>
 
@@ -158,21 +211,79 @@ export default function PostLinkedInPage() {
 
         {/* Liste des posts planifiés */}
         <div className="card">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">
+          <h2 className="text-xl font-bold text-gray-800 mb-6">
             Posts planifiés ({scheduledPosts.length})
           </h2>
           
           <div className="space-y-4">
             {scheduledPosts.length === 0 ? (
-              <p className="text-gray-500">Aucun post planifié</p>
+              <p className="text-gray-500 text-center py-8">Aucun post planifié</p>
             ) : (
               scheduledPosts.map((post) => (
-                <div key={post.id} className="p-4 border rounded-lg bg-gray-50">
-                  <h3 className="font-semibold">{post.title}</h3>
-                  <p className="text-sm text-gray-600 mt-1">{post.content}</p>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Prévu pour le : {formatDate(post.scheduledTime)}
-                  </p>
+                <div key={post.id} className="post-card">
+                  <div className="post-header">
+                    <div className="flex-1">
+                      <h3 className="post-title">{post.title}</h3>
+                      <p className="post-content">{post.content}</p>
+                      {editingPost === post.id ? (
+                        <div className="edit-form">
+                          <input
+                            type="date"
+                            value={editDateTime.date}
+                            onChange={(e) => setEditDateTime({ ...editDateTime, date: e.target.value })}
+                            className="input text-sm"
+                          />
+                          <input
+                            type="time"
+                            value={editDateTime.time}
+                            onChange={(e) => setEditDateTime({ ...editDateTime, time: e.target.value })}
+                            className="input text-sm"
+                          />
+                          <div className="action-buttons">
+                            <button
+                              onClick={() => handleUpdatePost(post.id)}
+                              className="btn-secondary"
+                            >
+                              Valider
+                            </button>
+                            <button
+                              onClick={() => setEditingPost(null)}
+                              className="btn-secondary"
+                            >
+                              Annuler
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="post-date">
+                            Prévu pour le : {formatDate(post.scheduledTime)}
+                          </p>
+                          <div className="action-buttons">
+                            <button
+                              onClick={() => {
+                                setEditingPost(post.id);
+                                const date = new Date(post.scheduledTime);
+                                setEditDateTime({
+                                  date: date.toISOString().split('T')[0],
+                                  time: date.toTimeString().slice(0, 5)
+                                });
+                              }}
+                              className="btn-secondary"
+                            >
+                              Modifier
+                            </button>
+                            <button
+                              onClick={() => handleDeletePost(post.id)}
+                              className="btn-danger"
+                            >
+                              Supprimer
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))
             )}
