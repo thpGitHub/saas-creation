@@ -3,11 +3,15 @@
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { useState, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+  
+  const isCreatePage = pathname === '/create';
 
   // Effet pour détecter le défilement
   useEffect(() => {
@@ -70,12 +74,21 @@ export default function Navbar() {
           <div className="hidden lg:flex items-center space-x-6">
             {user ? (
               <>
-                <Link href="/create" className="nav-link hover:animate-wiggle">
-                  <span className="relative">
-                    Créer un post
-                    <span className="absolute -top-1 -right-1 w-2 h-2 bg-cartoon-pink rounded-full animate-pulse"></span>
-                  </span>
-                </Link>
+                {isCreatePage ? (
+                  <Link href="/" className="nav-link hover:animate-wiggle">
+                    <span className="relative">
+                      Accueil
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-cartoon-green rounded-full animate-pulse"></span>
+                    </span>
+                  </Link>
+                ) : (
+                  <Link href="/create" className="nav-link hover:animate-wiggle">
+                    <span className="relative">
+                      Créer un post
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-cartoon-pink rounded-full animate-pulse"></span>
+                    </span>
+                  </Link>
+                )}
                 <button 
                   onClick={logout} 
                   className="nav-link hover:animate-wiggle"
@@ -128,19 +141,35 @@ export default function Navbar() {
                   </div>
                 </div>
                 
-                <Link 
-                  href="/create" 
-                  className="flex items-center py-3 px-4 rounded-cartoon border border-cartoon-dark/20 hover:bg-cartoon-bg transition-colors"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  <div className="w-8 h-8 rounded-full bg-cartoon-blue/10 flex items-center justify-center mr-3">
-                    <svg className="w-5 h-5 text-cartoon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                  </div>
-                  <span className="text-cartoon-dark font-bold">Créer un post</span>
-                  <span className="ml-auto w-2 h-2 bg-cartoon-pink rounded-full animate-pulse"></span>
-                </Link>
+                {isCreatePage ? (
+                  <Link 
+                    href="/" 
+                    className="flex items-center py-3 px-4 rounded-cartoon border border-cartoon-dark/20 hover:bg-cartoon-bg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-cartoon-green/10 flex items-center justify-center mr-3">
+                      <svg className="w-5 h-5 text-cartoon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                      </svg>
+                    </div>
+                    <span className="text-cartoon-dark font-bold">Accueil</span>
+                    <span className="ml-auto w-2 h-2 bg-cartoon-green rounded-full animate-pulse"></span>
+                  </Link>
+                ) : (
+                  <Link 
+                    href="/create" 
+                    className="flex items-center py-3 px-4 rounded-cartoon border border-cartoon-dark/20 hover:bg-cartoon-bg transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <div className="w-8 h-8 rounded-full bg-cartoon-blue/10 flex items-center justify-center mr-3">
+                      <svg className="w-5 h-5 text-cartoon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                      </svg>
+                    </div>
+                    <span className="text-cartoon-dark font-bold">Créer un post</span>
+                    <span className="ml-auto w-2 h-2 bg-cartoon-pink rounded-full animate-pulse"></span>
+                  </Link>
+                )}
                 
                 <button 
                   onClick={() => {
