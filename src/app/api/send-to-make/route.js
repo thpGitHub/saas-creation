@@ -24,11 +24,14 @@ export async function POST(req) {
 // Route pour voir les posts planifiés
 export async function GET() {
   try {
+    console.log("API - Récupération des posts planifiés...");
     const posts = scheduler.getScheduledPosts();
+    console.log("API - Posts planifiés récupérés:", posts.length);
     return new Response(JSON.stringify(posts), {
       status: 200,
     });
   } catch (error) {
+    console.error("API - Erreur récupération posts:", error);
     return new Response(JSON.stringify({ error: 'Erreur serveur' }), { 
       status: 500 
     });

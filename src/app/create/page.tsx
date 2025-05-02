@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
@@ -33,6 +33,9 @@ export default function CreatePostPage() {
   const [error, setError] = useState('');
   const [preview, setPreview] = useState<PreviewResponse | null>(null);
   const [advancedOptionsOpen, setAdvancedOptionsOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedPreview, setEditedPreview] = useState<{title: string, content: string} | null>(null);
+
   const [formData, setFormData] = useState({
     title: '',
     content: '',
@@ -72,6 +75,10 @@ export default function CreatePostPage() {
       }
 
       setPreview(data);
+      setEditedPreview({
+        title: data.title,
+        content: data.content
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
@@ -81,7 +88,7 @@ export default function CreatePostPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!preview) {
+    if (!preview || !editedPreview) {
       setError('Veuillez d\'abord prévisualiser votre post');
       return;
     }
@@ -98,8 +105,8 @@ export default function CreatePostPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          title: preview!.title,
-          content: preview!.content,
+          title: editedPreview.title,
+          content: editedPreview.content,
           scheduledTime: publishDateTime,
         }),
       });
@@ -107,13 +114,20 @@ export default function CreatePostPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de la programmation');
+        throw new Error(data.error || 'Erreur lors de la publication');
       }
 
-      router.push('/');
+      // Si c'est une planification, rediriger immédiatement
+      if (data.isScheduled) {
+        router.push('/');
+      } else {
+        // Sinon, attendre un court instant pour la publication immédiate
+        setTimeout(() => {
+          router.push('/');
+        }, 500);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-    } finally {
       setIsLoading(false);
     }
   };
@@ -260,47 +274,115 @@ export default function CreatePostPage() {
           )}
         </div>
 
-        {preview ? (
+        {preview && editedPreview ? (
           <div className="bg-gray-50 p-6 rounded-lg border border-gray-200">
             <div className="flex justify-between items-center mb-4">
               <h3 className="font-bold text-gray-800">Prévisualisation</h3>
-              {preview && preview._meta && (
-                <div className="text-xs text-gray-500">
-                  Généré avec {GPT_MODELS.find(m => m.id === preview?._meta?.model)?.name || preview?._meta?.model}
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setIsEditing(!isEditing)}
+                  className="text-sm text-blue-600 hover:text-blue-800 underline"
+                >
+                  {isEditing ? "Mode prévisualisation" : "Modifier le texte"}
+                </button>
+                {preview && preview._meta && (
+                  <div className="text-xs text-gray-500">
+                    Généré avec {GPT_MODELS.find(m => m.id === preview?._meta?.model)?.name || preview?._meta?.model}
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {isEditing ? (
+              <div className="space-y-4 mb-4">
+                <div>
+                  <label htmlFor="editTitle" className="block mb-1 text-sm font-medium text-gray-700">
+                    Titre
+                  </label>
+                  <input
+                    type="text"
+                    id="editTitle"
+                    value={editedPreview.title}
+                    onChange={(e) => setEditedPreview({...editedPreview, title: e.target.value})}
+                    className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={isLoading}
+                  />
                 </div>
-              )}
-            </div>
-            <div className="bg-white p-4 rounded-lg border mb-4">
-              <h4 className="font-semibold text-lg">{preview.title}</h4>
-              <p className="whitespace-pre-wrap mt-2 text-gray-700">{preview.content}</p>
-            </div>
-            <div className="flex justify-end space-x-4">
-              <button
-                type="button"
-                onClick={() => setPreview(null)}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg"
-                disabled={isLoading}
-              >
-                Modifier
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Publication en cours...' : 'Publier'}
-              </button>
+                <div>
+                  <label htmlFor="editContent" className="block mb-1 text-sm font-medium text-gray-700">
+                    Contenu
+                  </label>
+                  <textarea
+                    id="editContent"
+                    value={editedPreview.content}
+                    onChange={(e) => setEditedPreview({...editedPreview, content: e.target.value})}
+                    className="w-full p-2 border rounded-lg h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    disabled={isLoading}
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="bg-white p-4 rounded-lg border mb-4">
+                <h4 className="font-semibold text-lg">{editedPreview.title}</h4>
+                <p className="whitespace-pre-wrap mt-2 text-gray-700">{editedPreview.content}</p>
+              </div>
+            )}
+            
+            <div className="flex justify-between space-x-4">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => router.push('/')}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg"
+                  disabled={isLoading}
+                >
+                  Annuler
+                </button>
+              </div>
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPreview(null);
+                    setEditedPreview(null);
+                    setIsEditing(false);
+                  }}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg"
+                  disabled={isLoading}
+                >
+                  Modifier
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+                  disabled={isLoading}
+                >
+                  {isLoading ? 'Publication en cours...' : 'Publier'}
+                </button>
+              </div>
             </div>
           </div>
         ) : (
-          <button
-            type="button"
-            onClick={handlePreview}
-            className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Génération en cours...' : 'Prévisualiser'}
-          </button>
+          <div className="flex flex-col space-y-4">
+            <button
+              type="button"
+              onClick={handlePreview}
+              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Génération en cours...' : 'Prévisualiser'}
+            </button>
+            
+            <button
+              type="button"
+              onClick={() => router.push('/')}
+              className="w-full py-3 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-lg font-medium"
+              disabled={isLoading}
+            >
+              Annuler
+            </button>
+          </div>
         )}
       </form>
     </div>
