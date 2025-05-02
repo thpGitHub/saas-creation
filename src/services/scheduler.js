@@ -1,6 +1,17 @@
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
+// Définir le webhook à utiliser en fonction du réseau social
+const MAKE_WEBHOOKS = {
+  linkedin: process.env.MAKE_WEBHOOK_LINKEDIN_URL || process.env.MAKE_WEBHOOK_URL,
+  twitter: process.env.MAKE_WEBHOOK_TWITTER_URL,
+  facebook: process.env.MAKE_WEBHOOK_FACEBOOK_URL,
+  instagram: process.env.MAKE_WEBHOOK_INSTAGRAM_URL
+};
+
+// Réseau par défaut
+const DEFAULT_NETWORK = 'linkedin';
+
 class PostScheduler {
   constructor() {
     this.scheduledPosts = new Map();
@@ -11,7 +22,7 @@ class PostScheduler {
   loadPostsFromDB() {
     try {
       const posts = db.prepare(`
-        SELECT id, user_id, title, content, scheduled_time, status 
+        SELECT id, user_id, title, content, scheduled_time, status, network 
         FROM posts 
         WHERE status = 'scheduled' AND scheduled_time >= datetime('now')
       `).all();
@@ -20,6 +31,7 @@ class PostScheduler {
         const scheduledTime = new Date(post.scheduled_time).getTime();
         const now = new Date().getTime();
         const delay = scheduledTime - now;
+        const network = post.network || DEFAULT_NETWORK;
         
         if (delay > 0) {
           this.scheduledPosts.set(post.id, {
@@ -28,11 +40,13 @@ class PostScheduler {
             title: post.title,
             content: post.content,
             scheduledTime: post.scheduled_time,
+            network: network,
             timer: setTimeout(async () => {
               await this.sendToMake({
                 id: post.id,
                 title: post.title,
-                content: post.content
+                content: post.content,
+                network: network
               });
               this.scheduledPosts.delete(post.id);
             }, delay)
@@ -51,12 +65,14 @@ class PostScheduler {
       const scheduledTime = new Date(post.scheduledTime).getTime();
       const now = new Date().getTime();
       const delay = scheduledTime - now;
+      const network = post.network || DEFAULT_NETWORK;
 
       console.log('Scheduler - schedulePost - input:', {
         post,
         scheduledTime: new Date(post.scheduledTime).toISOString(),
         now: new Date(now).toISOString(),
-        delay
+        delay,
+        network
       });
 
       if (delay < 0) {
@@ -70,14 +86,15 @@ class PostScheduler {
       
       // Insérer le post dans la base de données
       db.prepare(`
-        INSERT INTO posts (id, user_id, title, content, scheduled_time, status)
-        VALUES (?, ?, ?, ?, ?, 'scheduled')
+        INSERT INTO posts (id, user_id, title, content, scheduled_time, status, network)
+        VALUES (?, ?, ?, ?, ?, 'scheduled', ?)
       `).run(
         postId,
         post.userId, // Il faut s'assurer que le userId est passé dans le post
         post.title,
         post.content,
-        post.scheduledTime
+        post.scheduledTime,
+        network
       );
       
       console.log('Scheduler - post inséré en BDD, programmation du timer...');
@@ -90,7 +107,8 @@ class PostScheduler {
           await this.sendToMake({
             id: postId,
             title: post.title,
-            content: post.content
+            content: post.content,
+            network: network
           });
           this.scheduledPosts.delete(postId);
         }, delay)
@@ -109,7 +127,20 @@ class PostScheduler {
       // Mise à jour du statut à 'sending'
       db.prepare(`UPDATE posts SET status = 'sending' WHERE id = ?`).run(post.id);
       
-      const response = await fetch(process.env.MAKE_WEBHOOK_URL, {
+      // Déterminer le webhook à utiliser
+      const network = post.network || DEFAULT_NETWORK;
+      const webhookUrl = MAKE_WEBHOOKS[network] || process.env.MAKE_WEBHOOK_URL;
+      
+      if (!webhookUrl) {
+        console.error(`Aucun webhook configuré pour le réseau ${network}`);
+        db.prepare(`UPDATE posts SET status = 'failed', error = ? WHERE id = ?`).run(
+          `Publication sur ${network} non configurée`,
+          post.id
+        );
+        return false;
+      }
+      
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -118,6 +149,7 @@ class PostScheduler {
           postId: post.id, // Envoyer l'ID pour le callback
           title: post.title,
           content: post.content,
+          network: network
         }),
       });
 
@@ -142,7 +174,7 @@ class PostScheduler {
     try {
       console.log('Scheduler - récupération des posts planifiés...');
       const posts = db.prepare(`
-        SELECT id, title, content, scheduled_time as scheduledTime 
+        SELECT id, title, content, scheduled_time as scheduledTime, network 
         FROM posts 
         WHERE status = 'scheduled' AND scheduled_time >= datetime('now') 
         ORDER BY scheduled_time ASC
@@ -155,6 +187,7 @@ class PostScheduler {
         title: post.title,
         content: post.content,
         scheduledTime: post.scheduledTime,
+        network: post.network || DEFAULT_NETWORK
       }));
     } catch (error) {
       console.error('Erreur lors de la récupération des posts programmés:', error);
@@ -211,7 +244,8 @@ class PostScheduler {
           await this.sendToMake({
             id: postId,
             title: post.title,
-            content: post.content
+            content: post.content,
+            network: post.network || DEFAULT_NETWORK
           });
           this.scheduledPosts.delete(postId);
         }, delay)

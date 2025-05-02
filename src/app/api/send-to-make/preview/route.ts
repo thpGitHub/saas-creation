@@ -12,6 +12,7 @@ interface PreviewRequestBody {
   content: string;
   model?: string;
   maxTokens?: number;
+  network?: string;
 }
 
 // Liste des modèles disponibles
@@ -27,6 +28,15 @@ const SUPPORTS_JSON_FORMAT = ["gpt-3.5-turbo"];
 // Modèle et tokens par défaut
 const DEFAULT_MODEL = "gpt-3.5-turbo";
 const DEFAULT_MAX_TOKENS = 500;
+const DEFAULT_NETWORK = "linkedin";
+
+// Configuration des réseaux sociaux
+const NETWORK_PROMPTS: Record<string, string> = {
+  "linkedin": "Tu es un expert en rédaction LinkedIn. Tu dois optimiser les posts pour maximiser l'engagement tout en gardant un ton professionnel. Le contenu doit être informatif et établir une autorité dans le domaine.",
+  "twitter": "Tu es un expert en rédaction Twitter/X. Tu dois optimiser les posts pour maximiser l'engagement tout en restant concis (maximum 280 caractères). Le ton doit être accrocheur et direct.",
+  "facebook": "Tu es un expert en rédaction Facebook. Tu dois optimiser les posts pour maximiser l'engagement social. Le contenu peut être plus conversationnel et personnel que sur LinkedIn.",
+  "instagram": "Tu es un expert en rédaction Instagram. Tu dois optimiser les posts pour maximiser l'engagement visuel. Le contenu doit être dynamique et adapté à un format de légende d'image."
+};
 
 export async function POST(request: Request) {
   try {
@@ -42,8 +52,14 @@ export async function POST(request: Request) {
     
     // Utiliser maxTokens spécifié ou la valeur par défaut
     const maxTokens = body.maxTokens || DEFAULT_MAX_TOKENS;
+    
+    // Utiliser réseau spécifié ou valeur par défaut
+    const network = body.network && NETWORK_PROMPTS[body.network] ? body.network : DEFAULT_NETWORK;
+    
+    // Obtenir le prompt spécifique au réseau
+    const networkPrompt = NETWORK_PROMPTS[network];
 
-    console.log(`🤖 Utilisation du modèle: ${model}, max tokens: ${maxTokens}`);
+    console.log(`🤖 Utilisation du modèle: ${model}, max tokens: ${maxTokens}, réseau: ${network}`);
 
     // Configuration de base
     const requestConfig: any = {
@@ -52,14 +68,14 @@ export async function POST(request: Request) {
       messages: [
         {
           role: "system",
-          content: "Tu es un expert en rédaction LinkedIn. Tu dois optimiser les posts pour maximiser l'engagement tout en gardant un ton professionnel. Tu DOIS répondre uniquement avec un objet JSON contenant 'title' et 'content'."
+          content: `${networkPrompt} Tu DOIS répondre uniquement avec un objet JSON contenant 'title' et 'content'.`
         },
         {
           role: "user",
-          content: `Rédige un post LinkedIn professionnel en français basé sur les informations suivantes :
+          content: `Rédige un post ${network} en français basé sur les informations suivantes :
 - Titre : ${body.title}
 - Contenu : ${body.content}
-Assure-toi que le ton est professionnel, engageant et adapté à une audience LinkedIn.${SUPPORTS_JSON_FORMAT.includes(model) ? '' : '\nFormate ta réponse sous forme d\'objet JSON avec les propriétés "title" et "content".'}`
+Assure-toi que le ton et le format sont parfaitement adaptés à ${network}.${SUPPORTS_JSON_FORMAT.includes(model) ? '' : '\nFormate ta réponse sous forme d\'objet JSON avec les propriétés "title" et "content".'}`
         }
       ]
     };
@@ -109,6 +125,7 @@ Assure-toi que le ton est professionnel, engageant et adapté à une audience Li
       _meta: {
         model: model,
         maxTokens: maxTokens,
+        network: network,
         usage: completion.usage
       }
     });
