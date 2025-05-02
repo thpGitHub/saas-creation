@@ -20,10 +20,16 @@ export default function ScheduledPosts() {
 
   const loadScheduledPosts = async () => {
     try {
+      console.log('Chargement des posts planifiés...');
       const response = await fetch('/api/send-to-make');
       if (response.ok) {
         const data = await response.json();
+        console.log('Posts planifiés reçus:', data);
         setPosts(data);
+      } else {
+        console.error('Erreur HTTP:', response.status, response.statusText);
+        const text = await response.text();
+        console.error('Réponse:', text);
       }
     } catch (error) {
       console.error('Erreur lors du chargement des posts:', error);
