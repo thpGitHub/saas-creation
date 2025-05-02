@@ -11,6 +11,42 @@ const GPT_MODELS = [
   { id: "gpt-4-turbo", name: "GPT-4 Turbo", description: "Version améliorée de GPT-4" }
 ];
 
+// Liste des réseaux sociaux disponibles
+const SOCIAL_NETWORKS = [
+  { 
+    id: "linkedin", 
+    name: "LinkedIn", 
+    icon: "/icons/linkedin.svg", 
+    color: "#0077B5", 
+    bgColor: "#E8F4F9",
+    description: "Professionnel" 
+  },
+  { 
+    id: "twitter", 
+    name: "Twitter/X", 
+    icon: "/icons/twitter.svg", 
+    color: "#1DA1F2", 
+    bgColor: "#E8F6FD",
+    description: "Court et concis" 
+  },
+  { 
+    id: "facebook", 
+    name: "Facebook", 
+    icon: "/icons/facebook.svg", 
+    color: "#1877F2", 
+    bgColor: "#E9F2FF",
+    description: "Engagement social" 
+  },
+  { 
+    id: "instagram", 
+    name: "Instagram", 
+    icon: "/icons/instagram.svg", 
+    color: "#E1306C", 
+    bgColor: "#FCEEF4",
+    description: "Visuel et tendance" 
+  }
+];
+
 // Type pour la prévisualisation
 interface PreviewResponse {
   title: string;
@@ -42,13 +78,17 @@ export default function CreatePostPage() {
     publishDate: '',
     publishTime: '',
     model: 'gpt-3.5-turbo',
-    maxTokens: 500
+    maxTokens: 500,
+    network: 'linkedin'
   });
 
   // Obtenir la date et l'heure minimales (maintenant)
   const now = new Date();
   const minDate = now.toISOString().split('T')[0];
   const minTime = now.toTimeString().slice(0, 5);
+
+  // Trouver le réseau social sélectionné
+  const selectedNetwork = SOCIAL_NETWORKS.find(network => network.id === formData.network) || SOCIAL_NETWORKS[0];
 
   const handlePreview = async () => {
     setError('');
@@ -64,7 +104,8 @@ export default function CreatePostPage() {
           title: formData.title,
           content: formData.content,
           model: formData.model,
-          maxTokens: formData.maxTokens
+          maxTokens: formData.maxTokens,
+          network: formData.network
         }),
       });
 
@@ -108,6 +149,7 @@ export default function CreatePostPage() {
           title: editedPreview.title,
           content: editedPreview.content,
           scheduledTime: publishDateTime,
+          network: formData.network
         }),
       });
 
@@ -146,6 +188,42 @@ export default function CreatePostPage() {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6 bg-white rounded-cartoon shadow-md border border-cartoon-dark/20 p-8">
+        {/* Sélecteur de réseau social */}
+        <div className="form-group">
+          <label className="label mb-3">Réseau social</label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {SOCIAL_NETWORKS.map(network => (
+              <div 
+                key={network.id}
+                onClick={() => setFormData({ ...formData, network: network.id })}
+                className={`cursor-pointer rounded-cartoon border-2 transition-all p-4 flex flex-col items-center hover:shadow-cartoon-button ${
+                  formData.network === network.id 
+                    ? `border-${network.color} bg-${network.bgColor} shadow-cartoon-button` 
+                    : 'border-cartoon-dark/10 hover:border-cartoon-dark/30'
+                }`}
+              >
+                <div 
+                  className={`w-12 h-12 rounded-full mb-2 flex items-center justify-center transition-transform ${
+                    formData.network === network.id ? 'scale-110' : ''
+                  }`}
+                  style={{ backgroundColor: network.bgColor, color: network.color }}
+                >
+                  <div className="text-2xl font-bold">
+                    {network.id === 'linkedin' && 'in'}
+                    {network.id === 'twitter' && 'X'}
+                    {network.id === 'facebook' && 'f'}
+                    {network.id === 'instagram' && 'Ig'}
+                  </div>
+                </div>
+                <span className={`font-bold text-sm ${formData.network === network.id ? `text-${network.color}` : 'text-cartoon-dark'}`}>
+                  {network.name}
+                </span>
+                <span className="text-xs text-gray-500 mt-1">{network.description}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="form-group">
           <label htmlFor="title" className="label">
             Titre
@@ -169,18 +247,32 @@ export default function CreatePostPage() {
           <label htmlFor="content" className="label">
             Contenu
           </label>
-          <textarea
-            id="content"
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            className="w-full px-4 py-3 border border-cartoon-dark/20 rounded-cartoon 
-            focus:ring-2 focus:ring-cartoon-blue/50 focus:border-cartoon-blue/30 outline-none
-            transition-all duration-200 bg-white shadow-sm min-h-[150px] resize-y
-            placeholder:text-gray-400"
-            required
-            disabled={isLoading}
-            placeholder="Décrivez le contenu que vous souhaitez générer..."
-          />
+          <div className="relative">
+            <textarea
+              id="content"
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              className="w-full px-4 py-3 border border-cartoon-dark/20 rounded-cartoon 
+              focus:ring-2 focus:ring-cartoon-blue/50 focus:border-cartoon-blue/30 outline-none
+              transition-all duration-200 bg-white shadow-sm min-h-[150px] resize-y
+              placeholder:text-gray-400"
+              required
+              disabled={isLoading}
+              placeholder={`Décrivez le contenu que vous souhaitez générer pour ${selectedNetwork.name}...`}
+            />
+            <div 
+              className="absolute bottom-3 right-3 px-2 py-1 rounded-full text-xs"
+              style={{ backgroundColor: selectedNetwork.bgColor, color: selectedNetwork.color }}
+            >
+              {selectedNetwork.name}
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-1">
+            {selectedNetwork.id === 'twitter' && 'Maximum 280 caractères (X/Twitter).'}
+            {selectedNetwork.id === 'linkedin' && 'Idéal pour un contenu professionnel et informatif.'}
+            {selectedNetwork.id === 'facebook' && 'Contenu varié, images et textes fonctionnent bien.'}
+            {selectedNetwork.id === 'instagram' && 'Fonctionne mieux avec des visuels. Texte dans la légende.'}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
