@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // Effet pour détecter le défilement
   useEffect(() => {
@@ -16,6 +17,18 @@ export default function Navbar() {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Effet pour gérer le scroll quand le menu est ouvert
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMenuOpen]);
 
   return (
     <nav 
@@ -27,7 +40,7 @@ export default function Navbar() {
     >
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
-          <Link href="/" className="flex items-center space-x-2 group">
+          <Link href="/" className="flex items-center space-x-2 group z-20">
             {/* Logo Cartoon */}
             <div className="w-10 h-10 rounded-full bg-cartoon-blue border-2 border-cartoon-dark flex items-center justify-center shadow-cartoon-button group-hover:shadow-none group-hover:translate-x-0.5 group-hover:translate-y-0.5 transition-all">
               <span className="text-white font-bold text-xl">SP</span>
@@ -37,7 +50,24 @@ export default function Navbar() {
             </span>
           </Link>
 
-          <div className="flex items-center space-x-6">
+          {/* Menu Burger pour mobile */}
+          <button 
+            className="lg:hidden z-20 relative w-12 h-12 flex flex-col justify-center items-center group"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label="Toggle menu"
+          >
+            <div className={`w-8 h-8 bg-white rounded-cartoon border-2 border-cartoon-dark shadow-cartoon-button overflow-hidden ${isMenuOpen ? 'rotate-45' : ''} transition-transform duration-300`}>
+              <div className="w-full h-full flex flex-col justify-center items-center relative">
+                <span className={`block w-5 h-0.5 bg-cartoon-dark rounded-full transition-all duration-300 absolute ${isMenuOpen ? 'rotate-0' : '-translate-y-1.5'}`}></span>
+                <span className={`block w-5 h-0.5 bg-cartoon-dark rounded-full transition-all duration-300 ${isMenuOpen ? 'opacity-0' : 'opacity-100'}`}></span>
+                <span className={`block w-5 h-0.5 bg-cartoon-dark rounded-full transition-all duration-300 absolute ${isMenuOpen ? 'rotate-90' : 'translate-y-1.5'}`}></span>
+              </div>
+            </div>
+            <span className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full transition-all duration-300 ${isMenuOpen ? 'bg-cartoon-red' : 'bg-cartoon-blue'}`}></span>
+          </button>
+
+          {/* Menu pour desktop */}
+          <div className="hidden lg:flex items-center space-x-6">
             {user ? (
               <>
                 <Link href="/create" className="nav-link hover:animate-wiggle">
@@ -64,6 +94,92 @@ export default function Navbar() {
                   Connexion
                 </Link>
                 <Link href="/register" className="btn-primary text-sm py-2 px-4">
+                  Inscription
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Menu mobile en overlay */}
+      <div 
+        className={`fixed inset-0 bg-cartoon-dark/80 backdrop-blur-sm flex items-center justify-center transition-all duration-500 z-10 ${
+          isMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={() => setIsMenuOpen(false)}
+      >
+        <div 
+          className="bg-white p-8 rounded-cartoon border-2 border-cartoon-dark shadow-cartoon-lg w-11/12 max-w-sm transform transition-all duration-300 animate-fade-in"
+          onClick={e => e.stopPropagation()}
+        >
+          <div className="flex flex-col space-y-6">
+            {user ? (
+              <>
+                <div className="flex items-center space-x-3 pb-4 border-b border-cartoon-dark/20">
+                  <div className="w-10 h-10 rounded-full bg-cartoon-purple border-2 border-cartoon-dark flex items-center justify-center shadow-cartoon-button">
+                    <span className="text-white font-bold text-sm">
+                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-cartoon-dark font-bold">{user.name || 'Utilisateur'}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                  </div>
+                </div>
+                
+                <Link 
+                  href="/create" 
+                  className="flex items-center py-3 px-4 rounded-cartoon border border-cartoon-dark/20 hover:bg-cartoon-bg transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-cartoon-blue/10 flex items-center justify-center mr-3">
+                    <svg className="w-5 h-5 text-cartoon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                    </svg>
+                  </div>
+                  <span className="text-cartoon-dark font-bold">Créer un post</span>
+                  <span className="ml-auto w-2 h-2 bg-cartoon-pink rounded-full animate-pulse"></span>
+                </Link>
+                
+                <button 
+                  onClick={() => {
+                    logout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="flex items-center py-3 px-4 rounded-cartoon border border-cartoon-dark/20 hover:bg-cartoon-bg transition-colors"
+                >
+                  <div className="w-8 h-8 rounded-full bg-cartoon-red/10 flex items-center justify-center mr-3">
+                    <svg className="w-5 h-5 text-cartoon-red" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                    </svg>
+                  </div>
+                  <span className="text-cartoon-dark font-bold">Déconnexion</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <Link 
+                  href="/login" 
+                  className="flex items-center py-3 px-4 rounded-cartoon border border-cartoon-dark/20 hover:bg-cartoon-bg transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <div className="w-8 h-8 rounded-full bg-cartoon-blue/10 flex items-center justify-center mr-3">
+                    <svg className="w-5 h-5 text-cartoon-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"></path>
+                    </svg>
+                  </div>
+                  <span className="text-cartoon-dark font-bold">Connexion</span>
+                </Link>
+                
+                <Link 
+                  href="/register" 
+                  className="btn-primary py-3 px-4 flex items-center justify-center"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
+                  </svg>
                   Inscription
                 </Link>
               </>
