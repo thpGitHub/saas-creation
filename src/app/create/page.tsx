@@ -62,6 +62,12 @@ interface PreviewResponse {
   }
 }
 
+// Pour l'upload d'image (uniquement LinkedIn)
+interface UploadedImage {
+  file: File;
+  preview: string;
+}
+
 export default function CreatePostPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -71,6 +77,8 @@ export default function CreatePostPage() {
   const [advancedOptionsOpen, setAdvancedOptionsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editedPreview, setEditedPreview] = useState<{title: string, content: string} | null>(null);
+  const [selectedImage, setSelectedImage] = useState<UploadedImage | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     title: '',
@@ -127,46 +135,92 @@ export default function CreatePostPage() {
     }
   };
 
+  // Gérer l'upload d'image
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/gif'].includes(file.type)) {
+      setError('Format d\'image non supporté. Utilisez JPG, PNG ou GIF.');
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('L\'image ne doit pas dépasser 5MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setSelectedImage({
+        file,
+        preview: reader.result as string
+      });
+      setError('');
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!preview || !editedPreview) {
       setError('Veuillez d\'abord prévisualiser votre post');
       return;
     }
-
     setError('');
     setIsLoading(true);
-
     try {
       const publishDateTime = new Date(`${formData.publishDate}T${formData.publishTime}`).toISOString();
-
-      const response = await fetch('/api/send-to-make/publish', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          title: editedPreview.title,
-          content: editedPreview.content,
-          scheduledTime: publishDateTime,
-          network: formData.network
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de la publication');
-      }
-
-      // Si c'est une planification, rediriger immédiatement
-      if (data.isScheduled) {
-        router.push('/');
-      } else {
-        // Sinon, attendre un court instant pour la publication immédiate
-        setTimeout(() => {
+      if (selectedImage && formData.network === 'linkedin') {
+        const formDataObj = new FormData();
+        formDataObj.append('title', editedPreview.title);
+        formDataObj.append('content', editedPreview.content);
+        formDataObj.append('scheduledTime', publishDateTime);
+        formDataObj.append('network', formData.network);
+        formDataObj.append('image', selectedImage.file);
+        const response = await fetch('/api/send-to-make/publish', {
+          method: 'POST',
+          body: formDataObj,
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Erreur lors de la publication');
+        }
+        if (data.isScheduled) {
           router.push('/');
-        }, 500);
+        } else {
+          setTimeout(() => {
+            router.push('/');
+          }, 500);
+        }
+      } else {
+        const response = await fetch('/api/send-to-make/publish', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            title: editedPreview.title,
+            content: editedPreview.content,
+            scheduledTime: publishDateTime,
+            network: formData.network
+          }),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Erreur lors de la publication');
+        }
+        if (data.isScheduled) {
+          router.push('/');
+        } else {
+          setTimeout(() => {
+            router.push('/');
+          }, 500);
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
@@ -386,6 +440,60 @@ export default function CreatePostPage() {
             </div>
           )}
         </div>
+
+        {/* Section upload d'image pour LinkedIn */}
+        {formData.network === 'linkedin' && (
+          <div className="form-group">
+            <label className="label">
+              Image (LinkedIn uniquement)
+              <span className="ml-1 text-xs text-gray-500">(optionnel, max 5 MB)</span>
+            </label>
+            <div className="mt-2">
+              {selectedImage ? (
+                <div className="relative border-2 border-dashed border-cartoon-dark/30 rounded-cartoon p-2 bg-cartoon-bg/20">
+                  <img 
+                    src={selectedImage.preview} 
+                    alt="Prévisualisation" 
+                    className="mx-auto max-h-64 rounded-cartoon object-contain" 
+                  />
+                  <div className="flex items-center justify-center mt-2">
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="px-3 py-1 bg-cartoon-red/90 text-white text-sm rounded-full hover:bg-cartoon-red transition-colors flex items-center"
+                    >
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Supprimer
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="border-2 border-dashed border-cartoon-dark/30 rounded-cartoon p-6 text-center hover:bg-cartoon-bg/10 transition-colors">
+                  <input
+                    type="file"
+                    id="image"
+                    accept="image/jpeg,image/png,image/gif"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    ref={fileInputRef}
+                  />
+                  <label 
+                    htmlFor="image"
+                    className="flex flex-col items-center cursor-pointer"
+                  >
+                    <svg className="w-12 h-12 mb-2 text-cartoon-blue/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-cartoon-dark font-medium">Cliquez pour ajouter une image</span>
+                    <span className="text-xs text-gray-500 mt-1">JPG, PNG ou GIF jusqu'à 5 MB</span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {preview && editedPreview ? (
           <div className="bg-cartoon-bg/50 border border-cartoon-dark/30 rounded-cartoon p-6 shadow-cartoon animate-fade-in">
