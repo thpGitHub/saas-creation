@@ -18,18 +18,16 @@ interface User {
 export async function GET(request: Request) {
   try {
     // Récupérer tous les cookies
-    const cookieStore = cookies();
-    const userCookieValue = cookieStore.has('user') 
-      ? cookieStore.getAll().find(cookie => cookie.name === 'user')?.value 
-      : null;
+    const cookieStore = await cookies();
+    const userCookie = cookieStore.get('user')?.value;
     
-    if (!userCookieValue) {
+    if (!userCookie) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
     
     let user: User;
     try {
-      user = JSON.parse(userCookieValue);
+      user = JSON.parse(userCookie);
     } catch (error) {
       return NextResponse.json({ error: 'Session invalide' }, { status: 401 });
     }
