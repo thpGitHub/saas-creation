@@ -32,9 +32,19 @@ export default function PostList({ posts }: PostListProps) {
           key={post.id} 
           className={`post-card hover:translate-y-[-2px] transition-all duration-300 ${index % 3 === 0 ? 'rotate-1' : index % 3 === 1 ? '-rotate-1' : 'rotate-0'}`}
         >
-          <div className="post-header">
-            <h3 className="post-title">{post.title}</h3>
-            <span className="badge-published float-right">LinkedIn</span>
+          <div className="post-header items-center">
+            <div>
+              <h3 className="post-title">{post.title}</h3>
+              <span className="text-gray-500 text-sm">{new Date(post.publishedAt).toLocaleString('fr-FR')}</span>
+            </div>
+            <span className="badge-published">{
+              post.network === 'linkedin' ? 'LinkedIn' :
+              post.network === 'twitter' ? 'Twitter' :
+              post.network === 'facebook' ? 'Facebook' :
+              post.network === 'instagram' ? 'Instagram' :
+              post.network === 'social' ? 'Réseau social' :
+              post.network || 'Réseau social'
+            }</span>
           </div>
           <p className="post-content whitespace-pre-wrap">{post.content}</p>
           <div className="text-sm text-cartoon-blue mt-3 font-bold flex items-center">

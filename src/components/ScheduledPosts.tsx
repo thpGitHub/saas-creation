@@ -5,6 +5,7 @@ interface ScheduledPost {
   title: string;
   content: string;
   scheduledTime: string;
+  network: string;
 }
 
 export default function ScheduledPosts() {
@@ -105,9 +106,25 @@ export default function ScheduledPosts() {
           key={post.id} 
           className={`post-card hover:translate-y-[-2px] transition-all duration-300 ${index % 3 === 0 ? '-rotate-1' : index % 3 === 1 ? 'rotate-1' : 'rotate-0'}`}
         >
-          <div className="post-header">
-            <h3 className="post-title">{post.title}</h3>
-            <span className="badge-scheduled">Planifié</span>
+          <div className="post-header items-center">
+            <div>
+              <h3 className="post-title">{post.title}</h3>
+            </div>
+            <span className={
+              post.network === 'linkedin' ? 'badge-published' :
+              post.network === 'twitter' ? 'badge bg-blue-400 text-white' :
+              post.network === 'facebook' ? 'badge bg-blue-600 text-white' :
+              post.network === 'instagram' ? 'badge bg-pink-500 text-white' :
+              post.network === 'social' ? 'badge bg-gray-400 text-white' :
+              'badge-scheduled'
+            }>{
+              post.network === 'linkedin' ? 'LinkedIn' :
+              post.network === 'twitter' ? 'Twitter' :
+              post.network === 'facebook' ? 'Facebook' :
+              post.network === 'instagram' ? 'Instagram' :
+              post.network === 'social' ? 'Réseau social' :
+              post.network || 'Réseau social'
+            }</span>
           </div>
           <p className="post-content whitespace-pre-wrap">{post.content}</p>
           
@@ -158,7 +175,7 @@ export default function ScheduledPosts() {
                 </svg>
                 Prévu pour le {new Date(post.scheduledTime).toLocaleString('fr-FR')}
               </div>
-              <div className="space-x-2">
+              <div className="flex flex-col space-y-2">
                 <button
                   onClick={() => {
                     setEditingPost(post.id);

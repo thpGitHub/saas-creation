@@ -10,16 +10,16 @@ interface User {
   name: string;
 }
 
-// Définir le webhook à utiliser en fonction du réseau social
-const MAKE_WEBHOOKS = {
+// Configuration des webhooks Make.com pour différents réseaux sociaux
+const WEBHOOKS = {
   linkedin: process.env.MAKE_WEBHOOK_LINKEDIN_URL || process.env.MAKE_WEBHOOK_URL,
   twitter: process.env.MAKE_WEBHOOK_TWITTER_URL,
   facebook: process.env.MAKE_WEBHOOK_FACEBOOK_URL,
   instagram: process.env.MAKE_WEBHOOK_INSTAGRAM_URL
 };
 
-// Réseau par défaut
-const DEFAULT_NETWORK = 'linkedin';
+// Réseau par défaut à utiliser
+const DEFAULT_NETWORK = 'social';
 
 // Vérifier et ajouter la colonne has_image si elle n'existe pas
 try {
@@ -164,7 +164,7 @@ export async function POST(request: Request) {
     }
     
     // Déterminer le webhook à utiliser
-    const webhookUrl = MAKE_WEBHOOKS[network as keyof typeof MAKE_WEBHOOKS];
+    const webhookUrl = WEBHOOKS[network as keyof typeof WEBHOOKS];
     
     if (!webhookUrl) {
       console.error(`Aucun webhook configuré pour le réseau ${network}`);
@@ -190,16 +190,16 @@ export async function POST(request: Request) {
     } else {
       // Pour les requêtes sans image, utiliser JSON
       makeRequestOptions = {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          postId: postId,
-          title: body.title,
-          content: body.content,
-          network: network
-        }),
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        postId: postId,
+        title: body.title,
+        content: body.content,
+        network: network
+      }),
       };
     }
     

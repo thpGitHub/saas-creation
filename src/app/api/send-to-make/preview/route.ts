@@ -28,14 +28,15 @@ const SUPPORTS_JSON_FORMAT = ["gpt-3.5-turbo"];
 // Modèle et tokens par défaut
 const DEFAULT_MODEL = "gpt-3.5-turbo";
 const DEFAULT_MAX_TOKENS = 500;
-const DEFAULT_NETWORK = "linkedin";
+const DEFAULT_NETWORK = "social";
 
-// Configuration des réseaux sociaux
+// Prompts spécifiques à chaque réseau social
 const NETWORK_PROMPTS: Record<string, string> = {
+  "social": "Tu es un expert en rédaction pour les réseaux sociaux. Tu dois optimiser les posts pour maximiser l'engagement tout en gardant un ton professionnel. Le contenu doit être informatif et établir une autorité dans le domaine.",
   "linkedin": "Tu es un expert en rédaction LinkedIn. Tu dois optimiser les posts pour maximiser l'engagement tout en gardant un ton professionnel. Le contenu doit être informatif et établir une autorité dans le domaine.",
-  "twitter": "Tu es un expert en rédaction Twitter/X. Tu dois optimiser les posts pour maximiser l'engagement tout en restant concis (maximum 280 caractères). Le ton doit être accrocheur et direct.",
-  "facebook": "Tu es un expert en rédaction Facebook. Tu dois optimiser les posts pour maximiser l'engagement social. Le contenu peut être plus conversationnel et personnel que sur LinkedIn.",
-  "instagram": "Tu es un expert en rédaction Instagram. Tu dois optimiser les posts pour maximiser l'engagement visuel. Le contenu doit être dynamique et adapté à un format de légende d'image."
+  "twitter": "Tu es un expert en rédaction Twitter. Tes tweets doivent être concis et impactants, tout en restant dans la limite des 280 caractères. Utilise un ton plus conversationnel et personnel que sur les réseaux professionnels.",
+  "facebook": "Tu es un expert en rédaction Facebook. Tu dois optimiser les posts pour l'engagement avec un ton plus personnel.",
+  "instagram": "Tu es un expert en rédaction Instagram. Tes descriptions doivent être visuelles et émotionnelles, avec des hashtags pertinents.",
 };
 
 export async function POST(request: Request) {

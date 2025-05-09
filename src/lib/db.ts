@@ -21,7 +21,7 @@ db.exec(`
     content TEXT NOT NULL,
     scheduled_time DATETIME,
     published_at DATETIME,
-    network TEXT NOT NULL DEFAULT 'linkedin',
+    network TEXT NOT NULL DEFAULT 'social',
     status TEXT CHECK(status IN ('draft', 'scheduled', 'published', 'failed')) DEFAULT 'draft',
     FOREIGN KEY (user_id) REFERENCES users (id)
   );

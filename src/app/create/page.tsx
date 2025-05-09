@@ -11,39 +11,39 @@ const GPT_MODELS = [
   { id: "gpt-4-turbo", name: "GPT-4 Turbo", description: "Version améliorée de GPT-4" }
 ];
 
-// Liste des réseaux sociaux disponibles
-const SOCIAL_NETWORKS = [
-  { 
-    id: "linkedin", 
-    name: "LinkedIn", 
-    icon: "/icons/linkedin.svg", 
-    color: "#0077B5", 
+// Options de réseaux sociaux disponibles
+const networkOptions = [
+  {
+    id: "linkedin",
+    name: "LinkedIn",
+    icon: "/icons/linkedin.svg",
+    color: "#0077B5",
     bgColor: "#E8F4F9",
-    description: "Professionnel" 
+    description: "Professionnel"
   },
-  { 
-    id: "twitter", 
-    name: "Twitter/X", 
-    icon: "/icons/twitter.svg", 
-    color: "#1DA1F2", 
+  {
+    id: "twitter",
+    name: "Twitter",
+    icon: "/icons/twitter.svg",
+    color: "#1DA1F2",
     bgColor: "#E8F6FD",
-    description: "Court et concis" 
+    description: "Court et concis"
   },
-  { 
-    id: "facebook", 
-    name: "Facebook", 
-    icon: "/icons/facebook.svg", 
-    color: "#1877F2", 
+  {
+    id: "facebook",
+    name: "Facebook",
+    icon: "/icons/facebook.svg",
+    color: "#1877F2",
     bgColor: "#E9F2FF",
-    description: "Engagement social" 
+    description: "Engagement social"
   },
-  { 
-    id: "instagram", 
-    name: "Instagram", 
-    icon: "/icons/instagram.svg", 
-    color: "#E1306C", 
+  {
+    id: "instagram",
+    name: "Instagram",
+    icon: "/icons/instagram.svg",
+    color: "#E1306C",
     bgColor: "#FCEEF4",
-    description: "Visuel et tendance" 
+    description: "Visuel et tendance"
   }
 ];
 
@@ -87,7 +87,7 @@ export default function CreatePostPage() {
     publishTime: '',
     model: 'gpt-3.5-turbo',
     maxTokens: 500,
-    network: 'linkedin'
+    network: 'social'
   });
 
   // Obtenir la date et l'heure minimales (maintenant)
@@ -96,7 +96,7 @@ export default function CreatePostPage() {
   const minTime = now.toTimeString().slice(0, 5);
 
   // Trouver le réseau social sélectionné
-  const selectedNetwork = SOCIAL_NETWORKS.find(network => network.id === formData.network) || SOCIAL_NETWORKS[0];
+  const selectedNetwork = networkOptions.find(network => network.id === formData.network) || networkOptions[0];
 
   const handlePreview = async () => {
     setError('');
@@ -246,7 +246,7 @@ export default function CreatePostPage() {
         <div className="form-group">
           <label className="label mb-3">Réseau social</label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            {SOCIAL_NETWORKS.map(network => (
+            {networkOptions.map(network => (
               <div 
                 key={network.id}
                 onClick={() => setFormData({ ...formData, network: network.id })}

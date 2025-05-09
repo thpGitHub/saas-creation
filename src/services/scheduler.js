@@ -1,16 +1,17 @@
 import db from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
-// Définir le webhook à utiliser en fonction du réseau social
-const MAKE_WEBHOOKS = {
+// Configuration des webhooks Make.com pour différents réseaux sociaux
+const WEBHOOKS = {
   linkedin: process.env.MAKE_WEBHOOK_LINKEDIN_URL || process.env.MAKE_WEBHOOK_URL,
   twitter: process.env.MAKE_WEBHOOK_TWITTER_URL,
   facebook: process.env.MAKE_WEBHOOK_FACEBOOK_URL,
-  instagram: process.env.MAKE_WEBHOOK_INSTAGRAM_URL
+  instagram: process.env.MAKE_WEBHOOK_INSTAGRAM_URL,
+  // Ajoutez d'autres réseaux au besoin
 };
 
-// Réseau par défaut
-const DEFAULT_NETWORK = 'linkedin';
+// Réseau par défaut à utiliser
+const DEFAULT_NETWORK = 'social';
 
 class PostScheduler {
   constructor() {
@@ -129,7 +130,7 @@ class PostScheduler {
       
       // Déterminer le webhook à utiliser
       const network = post.network || DEFAULT_NETWORK;
-      const webhookUrl = MAKE_WEBHOOKS[network] || process.env.MAKE_WEBHOOK_URL;
+      const webhookUrl = WEBHOOKS[network] || process.env.MAKE_WEBHOOK_URL;
       
       if (!webhookUrl) {
         console.error(`Aucun webhook configuré pour le réseau ${network}`);
