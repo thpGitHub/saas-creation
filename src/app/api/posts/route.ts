@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server';
 import db from '@/lib/db';
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const url = request.url || '';
+    const showAll = url.includes('all=1');
+    const limit = showAll ? 1000 : 3;
     const posts = db.prepare(`
       SELECT 
         p.id,
@@ -15,7 +18,7 @@ export async function GET() {
       JOIN users u ON p.user_id = u.id
       WHERE p.status = 'published'
       ORDER BY p.published_at DESC
-      LIMIT 20
+      LIMIT ${limit}
     `).all();
 
     return NextResponse.json(posts);

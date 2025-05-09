@@ -1,36 +1,137 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SocialPost
 
-## Getting Started
+## Présentation
 
-First, run the development server:
+**SocialPost** est une application web moderne permettant de planifier, rédiger, publier et gérer des posts sur plusieurs réseaux sociaux (LinkedIn, Twitter, Facebook, Instagram). L'interface est pensée pour la simplicité, la rapidité et l'automatisation, avec une intégration de l'IA pour la génération de contenu.
+
+---
+
+## Fonctionnalités principales
+
+- **Authentification sécurisée** (inscription, connexion, déconnexion)
+- **Tableau de bord** :
+  - Affichage des 3 derniers posts publiés
+  - Affichage des 3 prochains posts planifiés
+- **Création de posts** :
+  - Sélection du réseau social (LinkedIn, Twitter, Facebook, Instagram)
+  - Génération de contenu assistée par IA (OpenAI)
+  - Prévisualisation et édition du post avant publication
+  - Planification à une date/heure précise ou publication immédiate
+  - (Pour LinkedIn) Upload d'image (stockage à venir)
+- **Gestion des posts** :
+  - Liste complète des posts publiés
+  - Liste complète des posts planifiés
+  - Modification/suppression des posts planifiés
+- **Historique de connexion** (pour audit et sécurité)
+- **Navigation responsive** (desktop/mobile) avec menu burger
+
+---
+
+## Stack technique
+
+- **Next.js 13+ (App Router)**
+- **React 18**
+- **TypeScript**
+- **SQLite** (via better-sqlite3)
+- **TailwindCSS** (UI moderne et custom)
+- **OpenAI API** (génération de texte)
+- **Make.com** (webhooks pour automatisation multi-réseaux)
+- **bcryptjs** (hash des mots de passe)
+- **uuid** (identifiants uniques)
+
+---
+
+## Installation & Lancement
 
 ```bash
+git clone <repo>
+cd <repo>
+npm install
+# Configure .env.local avec tes clés (voir .env.example)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Accède à l'app sur [http://localhost:3000](http://localhost:3000)
+- Les données sont stockées dans `data/database.sqlite` (créée automatiquement)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Configuration
 
-## Learn More
+Crée un fichier `.env.local` à la racine avec :
 
-To learn more about Next.js, take a look at the following resources:
+```
+OPENAI_API_KEY=sk-...
+MAKE_WEBHOOK_LINKEDIN_URL=...
+MAKE_WEBHOOK_TWITTER_URL=...
+MAKE_WEBHOOK_FACEBOOK_URL=...
+MAKE_WEBHOOK_INSTAGRAM_URL=...
+NODE_ENV=development
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Structure des dossiers
 
-## Deploy on Vercel
+- `/src/app` : pages Next.js (dashboard, login, register, create, published-posts, scheduled-posts)
+- `/src/components` : composants UI (Navbar, PostList, ScheduledPosts, PreviewModal, etc)
+- `/src/context` : AuthContext (gestion de l'auth globale)
+- `/src/lib` : db.ts (connexion et migrations SQLite)
+- `/src/services` : scheduler.js (planification des posts)
+- `/src/app/api` : routes API (auth, posts, planification, preview IA, etc)
+- `/public/icons` : icônes SVG des réseaux sociaux
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Roadmap & Développements futurs
+
+### 1. **Stockage et affichage des images**
+- **Actuel** : L'upload d'image est possible pour LinkedIn, mais l'image n'est pas stockée ni affichée.
+- **À venir** :
+  - Stockage des images sur le filesystem local, S3, ou un bucket cloud.
+  - Ajout d'un champ `image` dans la table `posts` (URL ou binaire).
+  - Affichage de l'image dans les listes de posts publiés/planifiés et dans la prévisualisation.
+  - Sécurité : validation du type et de la taille, nettoyage des fichiers orphelins.
+
+### 2. **Pricing & monétisation**
+- **À venir** :
+  - Mise en place d'un système de plans (gratuit, premium, pro...)
+  - Limitation du nombre de posts planifiables selon le plan
+  - Paiement via Stripe ou LemonSqueezy
+  - Gestion des abonnements, factures, annulation, etc.
+  - UI dédiée pour l'upgrade/downgrade
+
+### 3. **Support multi-utilisateurs avancé**
+- Gestion d'équipes, rôles (admin, éditeur...)
+- Partage de posts entre membres d'une équipe
+
+### 4. **Analytics avancées**
+- Statistiques d'engagement (likes, commentaires, partages) par réseau
+- Graphiques d'évolution, export CSV
+
+### 5. **Automatisation & intégrations**
+- Intégration Zapier/Make.com pour d'autres réseaux ou workflows
+- Publication automatique sur d'autres plateformes (TikTok, Pinterest...)
+
+### 6. **Sécurité & RGPD**
+- Suppression automatique des données sur demande
+- Export des données utilisateur
+- 2FA (authentification à deux facteurs)
+
+---
+
+## Contribution
+
+PR et suggestions bienvenues !  
+Merci de créer une issue pour toute demande de fonctionnalité ou bug.
+
+---
+
+## Licence
+
+MIT
+
+---
+
+**Contact** :  
+Pour toute question ou projet sur-mesure, contacte-moi sur [GitHub](https://github.com/) ou par mail.

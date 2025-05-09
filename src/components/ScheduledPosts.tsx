@@ -1,3 +1,5 @@
+'use client';
+
 import { useState, useEffect } from 'react';
 
 interface ScheduledPost {
@@ -8,7 +10,11 @@ interface ScheduledPost {
   network: string;
 }
 
-export default function ScheduledPosts() {
+interface ScheduledPostsProps {
+  all?: boolean;
+}
+
+export default function ScheduledPosts({ all }: ScheduledPostsProps) {
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [editingPost, setEditingPost] = useState<string | null>(null);
   const [editDateTime, setEditDateTime] = useState({ date: '', time: '' });
@@ -21,8 +27,9 @@ export default function ScheduledPosts() {
 
   const loadScheduledPosts = async () => {
     try {
+      const url = all ? '/api/send-to-make?all=1' : '/api/send-to-make';
       console.log('Chargement des posts planifiés...');
-      const response = await fetch('/api/send-to-make');
+      const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         console.log('Posts planifiés reçus:', data);
