@@ -22,11 +22,11 @@ export async function POST(req) {
 }
 
 // Route pour voir les posts planifiés
-export async function GET() {
+export async function GET(req) {
   try {
-    console.log("API - Récupération des posts planifiés...");
-    const posts = scheduler.getScheduledPosts();
-    console.log("API - Posts planifiés récupérés:", posts.length);
+    const url = req.url || '';
+    const showAll = url.includes('all=1');
+    const posts = scheduler.getScheduledPosts(showAll);
     return new Response(JSON.stringify(posts), {
       status: 200,
     });

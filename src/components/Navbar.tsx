@@ -89,6 +89,8 @@ export default function Navbar() {
                     </span>
                   </Link>
                 )}
+                <Link href="/published-posts" className="nav-link hover:animate-wiggle">Posts publiés</Link>
+                <Link href="/scheduled-posts" className="nav-link hover:animate-wiggle">Posts planifiés</Link>
                 <button 
                   onClick={logout} 
                   className="nav-link hover:animate-wiggle"
@@ -170,6 +172,23 @@ export default function Navbar() {
                     <span className="ml-auto w-2 h-2 bg-cartoon-pink rounded-full animate-pulse"></span>
                   </Link>
                 )}
+                
+                <Link href="/published-posts" className="flex items-center py-3 px-4 rounded-cartoon border border-cartoon-dark/20 hover:bg-cartoon-bg transition-colors" onClick={() => setIsMenuOpen(false)}>
+                  <div className="w-8 h-8 rounded-full bg-cartoon-green/10 flex items-center justify-center mr-3">
+                    <svg className="w-5 h-5 text-cartoon-green" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-cartoon-dark font-bold">Posts publiés</span>
+                </Link>
+                <Link href="/scheduled-posts" className="flex items-center py-3 px-4 rounded-cartoon border border-cartoon-dark/20 hover:bg-cartoon-bg transition-colors" onClick={() => setIsMenuOpen(false)}>
+                  <div className="w-8 h-8 rounded-full bg-cartoon-yellow/10 flex items-center justify-center mr-3">
+                    <svg className="w-5 h-5 text-cartoon-yellow" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <span className="text-cartoon-dark font-bold">Posts planifiés</span>
+                </Link>
                 
                 <button 
                   onClick={() => {

@@ -112,7 +112,7 @@ export default function HomePage() {
       <div className="grid md:grid-cols-2 gap-8">
         <div>
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-cartoon-dark">Posts publiés</h2>
+            <h2 className="text-xl font-semibold text-cartoon-dark">Derniers posts publiés</h2>
             <button 
               onClick={handleRefresh} 
               className="flex items-center px-3 py-1 rounded-cartoon bg-white border border-cartoon-dark/20 text-cartoon-blue font-bold text-sm transition-all hover:shadow-cartoon-button"
@@ -155,7 +155,7 @@ export default function HomePage() {
         </div>
 
         <div>
-          <h2 className="text-xl font-semibold mb-4 text-cartoon-dark">Posts planifiés</h2>
+          <h2 className="text-xl font-semibold mb-4 text-cartoon-dark">Derniers posts planifiés</h2>
           <ScheduledPosts />
         </div>
       </div>

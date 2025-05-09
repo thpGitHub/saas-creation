@@ -170,15 +170,17 @@ class PostScheduler {
     }
   }
 
-  getScheduledPosts() {
+  getScheduledPosts(showAll = false) {
     // Récupérer depuis la base de données pour avoir les données les plus récentes
     try {
       console.log('Scheduler - récupération des posts planifiés...');
+      const limit = showAll ? 1000 : 3;
       const posts = db.prepare(`
         SELECT id, title, content, scheduled_time as scheduledTime, network 
         FROM posts 
         WHERE status = 'scheduled' AND scheduled_time >= datetime('now') 
         ORDER BY scheduled_time ASC
+        LIMIT ${limit}
       `).all();
       
       console.log('Scheduler - posts planifiés trouvés:', posts.length);
