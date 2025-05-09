@@ -39,9 +39,9 @@ export default function PreviewModal({ isOpen, onClose, onConfirm, post }: Previ
   return (
     <div className="linkedin-preview-container">
       <div className="linkedin-preview-modal">
-        {/* En-tête du modal */}
+        <div className="preview-overlay" onClick={onClose}></div>
         <div className="linkedin-preview-header">
-          <h2 className="linkedin-preview-title">Prévisualisation LinkedIn</h2>
+          <h2 className="linkedin-preview-title">Prévisualisation Réseau Social</h2>
           <button onClick={onClose} className="linkedin-preview-close-btn">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
           </button>

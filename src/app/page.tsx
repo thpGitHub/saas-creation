@@ -64,17 +64,8 @@ export default function HomePage() {
         </h1>
         
         <p className="mb-8 text-lg text-gray-600 max-w-md mx-auto">
-          Planifiez et publiez vos posts LinkedIn facilement grâce à l'intelligence artificielle.
+          Planifiez et publiez vos posts sur les réseaux sociaux facilement grâce à l'intelligence artificielle.
         </p>
-        
-        <div className="space-x-6 mt-8">
-          <Link href="/login" className="btn-primary text-lg py-3 px-8">
-            Se connecter
-          </Link>
-          <Link href="/register" className="btn-secondary text-lg py-3 px-8">
-            S'inscrire
-          </Link>
-        </div>
         
         <div className="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
           <div className="card p-6 hover:translate-y-[-5px]">
@@ -104,7 +95,7 @@ export default function HomePage() {
               </svg>
             </div>
             <h3 className="text-lg font-bold mb-2 text-cartoon-dark">Analytics</h3>
-            <p className="text-gray-600">Suivez l'engagement de vos publications sur LinkedIn.</p>
+            <p className="text-gray-600">Suivez l'engagement de vos publications sur les réseaux sociaux.</p>
           </div>
         </div>
       </div>
