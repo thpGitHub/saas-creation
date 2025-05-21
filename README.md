@@ -97,6 +97,32 @@ Chaque réseau social dispose d'un prompt spécifique adapté à ses particulari
 - Gestion des dates lointaines dans la base de données
 - Vérification automatique et mise à jour des statuts des posts expirés
 
+#### Gestion des dates lointaines en détail
+
+Le système de planification utilise une approche hybride pour gérer efficacement les publications à différentes échéances :
+
+1. **Stockage en base de données** : Toutes les dates de publication sont enregistrées dans la colonne `scheduled_time` de la table `posts` au format datetime SQLite.
+
+2. **Mécanisme de vérification automatique** : À chaque requête listant les posts programmés, le système exécute cette requête SQL :
+   ```sql
+   UPDATE posts 
+   SET status = 'failed'
+   WHERE status = 'scheduled' 
+   AND scheduled_time < datetime('now')
+   ```
+   Cette vérification marque automatiquement comme "échoués" les posts dont la date est passée mais qui n'ont pas été publiés.
+
+3. **Filtrage intelligent** : Seuls les posts dont la date est dans le futur sont présentés à l'utilisateur grâce à cette condition dans les requêtes :
+   ```sql
+   AND datetime(scheduled_time) > datetime('now')
+   ```
+
+4. **Architecture double système** : 
+   - Pour les posts à publication immédiate ou très proche : utilisation de timers JavaScript
+   - Pour les posts à moyen/long terme : stockage persistant en base de données avec vérification à chaque requête
+
+Cette architecture permet de planifier des posts sur plusieurs mois sans surcharger la mémoire du serveur avec des timers JavaScript qui devraient rester actifs trop longtemps.
+
 ### Intégration avec Make.com
 
 Les posts générés sont envoyés à Make.com via des webhooks personnalisés pour chaque réseau social, permettant une publication automatisée sur les plateformes.
