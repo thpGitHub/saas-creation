@@ -12,6 +12,7 @@ export default function Navbar() {
   const pathname = usePathname();
   
   const isCreatePage = pathname === '/create';
+  const isHomePage = pathname === '/';
 
   // Effet pour détecter le défilement
   useEffect(() => {
@@ -67,7 +68,6 @@ export default function Navbar() {
                 <span className={`block w-5 h-0.5 bg-cartoon-dark rounded-full transition-all duration-300 absolute ${isMenuOpen ? 'rotate-90' : 'translate-y-1.5'}`}></span>
               </div>
             </div>
-            <span className={`absolute -bottom-1 -right-1 w-3 h-3 rounded-full transition-all duration-300 ${isMenuOpen ? 'bg-cartoon-red' : 'bg-cartoon-blue'}`}></span>
           </button>
 
           {/* Menu pour desktop */}
@@ -78,14 +78,12 @@ export default function Navbar() {
                   <Link href="/" className="nav-link hover:animate-wiggle">
                     <span className="relative">
                       Accueil
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-cartoon-green rounded-full animate-pulse"></span>
                     </span>
                   </Link>
                 ) : (
                   <Link href="/create" className="nav-link hover:animate-wiggle">
                     <span className="relative">
                       Créer un post
-                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-cartoon-pink rounded-full animate-pulse"></span>
                     </span>
                   </Link>
                 )}
@@ -155,7 +153,6 @@ export default function Navbar() {
                       </svg>
                     </div>
                     <span className="text-cartoon-dark font-bold">Accueil</span>
-                    <span className="ml-auto w-2 h-2 bg-cartoon-green rounded-full animate-pulse"></span>
                   </Link>
                 ) : (
                   <Link 
@@ -169,7 +166,6 @@ export default function Navbar() {
                       </svg>
                     </div>
                     <span className="text-cartoon-dark font-bold">Créer un post</span>
-                    <span className="ml-auto w-2 h-2 bg-cartoon-pink rounded-full animate-pulse"></span>
                   </Link>
                 )}
                 
