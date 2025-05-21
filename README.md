@@ -71,6 +71,38 @@ NODE_ENV=development
 
 ---
 
+## Fonctionnement de l'IA et génération de contenu
+
+Notre application utilise l'API OpenAI pour générer automatiquement du contenu optimisé pour différents réseaux sociaux.
+
+### Intégration avec OpenAI
+
+- Utilisation de l'API officielle OpenAI via le package `openai`
+- Support de plusieurs modèles (GPT-3.5-Turbo, GPT-4, GPT-4-Turbo)
+- Configuration flexible de la longueur du contenu généré (post court, moyen, long)
+
+### Prompts spécialisés par réseau social
+
+Chaque réseau social dispose d'un prompt spécifique adapté à ses particularités :
+
+- **LinkedIn** : Contenu professionnel et informatif avec un ton d'autorité
+- **Twitter** : Posts concis (280 caractères max) avec un ton conversationnel
+- **Facebook** : Contenu engageant avec un ton plus personnel
+- **Instagram** : Descriptions visuelles et émotionnelles avec hashtags pertinents
+
+### Système de planification
+
+- Publication immédiate ou programmée
+- Timer JavaScript pour les publications à court terme
+- Gestion des dates lointaines dans la base de données
+- Vérification automatique et mise à jour des statuts des posts expirés
+
+### Intégration avec Make.com
+
+Les posts générés sont envoyés à Make.com via des webhooks personnalisés pour chaque réseau social, permettant une publication automatisée sur les plateformes.
+
+---
+
 ## Structure des dossiers
 
 - `/src/app` : pages Next.js (dashboard, login, register, create, published-posts, scheduled-posts)
