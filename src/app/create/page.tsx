@@ -419,22 +419,48 @@ export default function CreatePostPage() {
               </div>
               
               <div className="form-group">
-                <label htmlFor="maxTokens" className="label flex justify-between">
-                  <span>Nombre maximum de tokens</span>
-                  <span className="text-cartoon-blue font-bold">{formData.maxTokens}</span>
+                <label className="label mb-2">
+                  Longueur du post généré
                 </label>
-                <div className="flex items-center gap-4 mt-2">
-                  <input
-                    type="range"
-                    id="maxTokens"
-                    value={formData.maxTokens}
-                    onChange={(e) => setFormData({ ...formData, maxTokens: parseInt(e.target.value) })}
-                    min="100"
-                    max="2000"
-                    step="50"
-                    className="w-full h-3 bg-gray-100 rounded-full appearance-none cursor-pointer accent-cartoon-blue"
-                    disabled={isLoading}
-                  />
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, maxTokens: 250 })}
+                    className={`py-2 px-4 border rounded-cartoon transition-all ${
+                      formData.maxTokens === 250 
+                        ? 'bg-cartoon-blue text-white border-cartoon-blue shadow-cartoon-button' 
+                        : 'bg-white text-gray-700 border-cartoon-dark/20 hover:bg-cartoon-bg/20'
+                    }`}
+                  >
+                    <div className="font-bold">Post court</div>
+                    <div className="text-xs">Concis et direct</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, maxTokens: 500 })}
+                    className={`py-2 px-4 border rounded-cartoon transition-all ${
+                      formData.maxTokens === 500 
+                        ? 'bg-cartoon-blue text-white border-cartoon-blue shadow-cartoon-button' 
+                        : 'bg-white text-gray-700 border-cartoon-dark/20 hover:bg-cartoon-bg/20'
+                    }`}
+                  >
+                    <div className="font-bold">Post moyen</div>
+                    <div className="text-xs">Équilibré</div>
+                  </button>
+                  
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, maxTokens: 1000 })}
+                    className={`py-2 px-4 border rounded-cartoon transition-all ${
+                      formData.maxTokens === 1000 
+                        ? 'bg-cartoon-blue text-white border-cartoon-blue shadow-cartoon-button' 
+                        : 'bg-white text-gray-700 border-cartoon-dark/20 hover:bg-cartoon-bg/20'
+                    }`}
+                  >
+                    <div className="font-bold">Post long</div>
+                    <div className="text-xs">Détaillé et complet</div>
+                  </button>
                 </div>
               </div>
             </div>
@@ -565,19 +591,7 @@ export default function CreatePostPage() {
               >
                 Annuler
               </button>
-              <div className="flex space-x-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPreview(null);
-                    setEditedPreview(null);
-                    setIsEditing(false);
-                  }}
-                  className="btn-secondary"
-                  disabled={isLoading}
-                >
-                  Modifier
-                </button>
+              <div>
                 <button
                   type="submit"
                   className="btn-primary"

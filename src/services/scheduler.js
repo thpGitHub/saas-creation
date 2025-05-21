@@ -22,6 +22,15 @@ class PostScheduler {
   // Charger les posts programmés depuis la DB au démarrage
   loadPostsFromDB() {
     try {
+      // 1. D'abord, mettre à jour tous les posts passés en "failed"
+      db.prepare(`
+        UPDATE posts 
+        SET status = 'failed'
+        WHERE status = 'scheduled' 
+        AND scheduled_time < datetime('now')
+      `).run();
+      
+      // 2. Ensuite récupérer les posts encore valides
       const posts = db.prepare(`
         SELECT id, user_id, title, content, scheduled_time, status, network 
         FROM posts 
@@ -100,11 +109,13 @@ class PostScheduler {
       
       console.log('Scheduler - post inséré en BDD, programmation du timer...');
       
-      // Programmer le post en mémoire
-      this.scheduledPosts.set(postId, {
-        ...post,
-        id: postId,
-        timer: setTimeout(async () => {
+      // Pour les posts dont la date est trop éloignée, ne pas créer de timer
+      const maxTimeout = 2147483647; // Maximum JavaScript timeout ~24.8 jours
+      let timer = null;
+      
+      // Ne configurer le timer que si la date est dans moins de 24 jours
+      if (delay < maxTimeout) {
+        timer = setTimeout(async () => {
           await this.sendToMake({
             id: postId,
             title: post.title,
@@ -112,7 +123,14 @@ class PostScheduler {
             network: network
           });
           this.scheduledPosts.delete(postId);
-        }, delay)
+        }, delay);
+      }
+      
+      // Programmer le post en mémoire
+      this.scheduledPosts.set(postId, {
+        ...post,
+        id: postId,
+        timer: timer
       });
 
       console.log('Scheduler - post planifié avec succès:', postId);
@@ -125,8 +143,8 @@ class PostScheduler {
 
   async sendToMake(post) {
     try {
-      // Mise à jour du statut à 'sending'
-      db.prepare(`UPDATE posts SET status = 'sending' WHERE id = ?`).run(post.id);
+      // Ne pas utiliser le statut 'sending' qui n'est pas autorisé par la contrainte CHECK
+      // Nous utiliserons directement 'published' ou 'failed'
       
       // Déterminer le webhook à utiliser
       const network = post.network || DEFAULT_NETWORK;
@@ -134,10 +152,7 @@ class PostScheduler {
       
       if (!webhookUrl) {
         console.error(`Aucun webhook configuré pour le réseau ${network}`);
-        db.prepare(`UPDATE posts SET status = 'failed', error = ? WHERE id = ?`).run(
-          `Publication sur ${network} non configurée`,
-          post.id
-        );
+        db.prepare(`UPDATE posts SET status = 'failed' WHERE id = ?`).run(post.id);
         return false;
       }
       
@@ -160,8 +175,8 @@ class PostScheduler {
         throw new Error('Erreur lors de l\'envoi à Make');
       }
       
-      // Note: On ne met pas à jour le statut à 'published' ici
-      // Ce sera fait par le callback de Make
+      // Marquer comme publié directement ici
+      db.prepare(`UPDATE posts SET status = 'published' WHERE id = ?`).run(post.id);
       
       return true;
     } catch (error) {
@@ -174,6 +189,15 @@ class PostScheduler {
     // Récupérer depuis la base de données pour avoir les données les plus récentes
     try {
       console.log('Scheduler - récupération des posts planifiés...');
+      
+      // D'abord, mettre à jour tous les posts passés
+      db.prepare(`
+        UPDATE posts 
+        SET status = 'failed'
+        WHERE status = 'scheduled' 
+        AND scheduled_time < datetime('now')
+      `).run();
+      
       const limit = showAll ? 1000 : 3;
       const posts = db.prepare(`
         SELECT id, title, content, scheduled_time as scheduledTime, network 
@@ -218,12 +242,9 @@ class PostScheduler {
 
   updatePost(postId, newScheduledTime) {
     try {
+      // Vérifier si le post existe en mémoire
       const post = this.scheduledPosts.get(postId);
-      if (!post) return false;
-
-      // Annuler le timer existant
-      clearTimeout(post.timer);
-
+      
       // Calculer le nouveau délai
       const scheduledTime = new Date(newScheduledTime).getTime();
       const now = new Date().getTime();
@@ -233,17 +254,63 @@ class PostScheduler {
         throw new Error('La date de publication ne peut pas être dans le passé');
       }
 
-      // Mettre à jour dans la BD
+      // Mettre à jour dans la BDD
       db.prepare(`UPDATE posts SET scheduled_time = ? WHERE id = ?`).run(
         newScheduledTime,
         postId
       );
       
-      // Mettre à jour le post avec le nouveau timer
-      this.scheduledPosts.set(postId, {
-        ...post,
-        scheduledTime: newScheduledTime,
-        timer: setTimeout(async () => {
+      // Si le post n'existait pas en mémoire, c'est qu'il est simplement dans la BDD
+      if (!post) {
+        // Récupérer les informations du post depuis la BDD
+        const postData = db.prepare(`SELECT title, content, network, user_id FROM posts WHERE id = ?`).get(postId);
+        
+        // Si le post existe en BDD, le charger en mémoire
+        if (postData) {
+          const maxTimeout = 2147483647; // Maximum JavaScript timeout ~24.8 jours
+          let timer = null;
+          
+          // Ne configurer le timer que si la date est dans moins de 24 jours
+          if (delay < maxTimeout) {
+            timer = setTimeout(async () => {
+              await this.sendToMake({
+                id: postId,
+                title: postData.title,
+                content: postData.content,
+                network: postData.network || DEFAULT_NETWORK
+              });
+              this.scheduledPosts.delete(postId);
+            }, delay);
+          }
+          
+          // Ajouter à la Map des posts programmés
+          this.scheduledPosts.set(postId, {
+            id: postId,
+            userId: postData.user_id,
+            title: postData.title,
+            content: postData.content,
+            scheduledTime: newScheduledTime,
+            network: postData.network || DEFAULT_NETWORK,
+            timer: timer
+          });
+          
+          return true;
+        }
+        
+        return false;
+      }
+      
+      // Annuler le timer existant s'il y en a un
+      if (post.timer) {
+        clearTimeout(post.timer);
+      }
+      
+      // Pour les posts dont la date est trop éloignée, ne pas créer de timer
+      let newTimer = null;
+      const maxTimeout = 2147483647; // Maximum JavaScript timeout ~24.8 jours
+      
+      if (delay < maxTimeout) {
+        newTimer = setTimeout(async () => {
           await this.sendToMake({
             id: postId,
             title: post.title,
@@ -251,7 +318,14 @@ class PostScheduler {
             network: post.network || DEFAULT_NETWORK
           });
           this.scheduledPosts.delete(postId);
-        }, delay)
+        }, delay);
+      }
+      
+      // Mettre à jour le post avec le nouveau timer (ou null si date trop éloignée)
+      this.scheduledPosts.set(postId, {
+        ...post,
+        scheduledTime: newScheduledTime,
+        timer: newTimer
       });
 
       return true;

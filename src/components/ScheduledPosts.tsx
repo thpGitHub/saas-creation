@@ -22,18 +22,35 @@ export default function ScheduledPosts({ all }: ScheduledPostsProps) {
   useEffect(() => {
     loadScheduledPosts();
     const interval = setInterval(loadScheduledPosts, 30000);
-    return () => clearInterval(interval);
+    
+    // Écouter l'événement de rafraîchissement depuis le bouton dans page.tsx
+    const handleRefreshEvent = () => loadScheduledPosts();
+    window.addEventListener('refresh-scheduled-posts', handleRefreshEvent);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('refresh-scheduled-posts', handleRefreshEvent);
+    };
   }, []);
 
   const loadScheduledPosts = async () => {
     try {
-      const url = all ? '/api/send-to-make?all=1' : '/api/send-to-make';
+      const url = all ? '/api/scheduled-posts?all=1' : '/api/scheduled-posts';
       console.log('Chargement des posts planifiés...');
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
         console.log('Posts planifiés reçus:', data);
-        setPosts(data);
+        
+        // Filtre supplémentaire côté client pour éliminer les posts passés
+        const now = new Date();
+        const filteredPosts = data.filter((post: ScheduledPost) => {
+          const postDate = new Date(post.scheduledTime);
+          return postDate > now;
+        });
+        
+        console.log('Posts après filtrage:', filteredPosts.length);
+        setPosts(filteredPosts);
       } else {
         console.error('Erreur HTTP:', response.status, response.statusText);
         const text = await response.text();
@@ -48,7 +65,7 @@ export default function ScheduledPosts({ all }: ScheduledPostsProps) {
     try {
       const publishDateTime = new Date(`${editDateTime.date}T${editDateTime.time}`).toISOString();
       
-      const response = await fetch('/api/send-to-make', {
+      const response = await fetch('/api/scheduled-posts', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -73,7 +90,7 @@ export default function ScheduledPosts({ all }: ScheduledPostsProps) {
 
   const handleDeletePost = async (postId: string) => {
     try {
-      const response = await fetch('/api/send-to-make', {
+      const response = await fetch('/api/scheduled-posts', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
